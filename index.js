@@ -52,7 +52,7 @@ async function run() {
     const reviewCollection = client.db("RainbowFeastDB").collection("reviews");
     const cartCollection = client.db("RainbowFeastDB").collection("carts");
 
-    // SECURE APIS
+    // SECURE APISss
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
