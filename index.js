@@ -87,7 +87,7 @@ async function run() {
     });
 
     // add a user
-    app.post("/users", async (req, res) => {
+    app.post("/users",verifyJWT,verifyAdmin, async (req, res) => {
       const user = req.body;
       // console.log(user);
       const query = { email: user.email };
@@ -133,6 +133,12 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
+    
+    app.post('/menu', async(req,res)=>{
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
+      res.send(result);
+    })
     //review related apis---------------
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
