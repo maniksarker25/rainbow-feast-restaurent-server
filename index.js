@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 // middle ware
@@ -52,29 +52,33 @@ async function run() {
     const menuCollection = client.db("RainbowFeastDB").collection("menu");
     const reviewCollection = client.db("RainbowFeastDB").collection("reviews");
     const cartCollection = client.db("RainbowFeastDB").collection("carts");
-    const paymentCollection = client.db("RainbowFeastDB").collection("payments");
+    const paymentCollection = client
+      .db("RainbowFeastDB")
+      .collection("payments");
 
     // SECURE APISss
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '2h',
+        expiresIn: "2h",
       });
       res.send({ token });
     });
 
     //user related apis
 
-     // Warning: use verifyJWT before using verifyAdmin
-     const verifyAdmin = async (req, res, next) => {
+    // Warning: use verifyJWT before using verifyAdmin
+    const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
-      const query = { email: email }
+      const query = { email: email };
       const user = await userCollection.findOne(query);
-      if (user?.role !== 'admin') {
-        return res.status(403).send({ error: true, message: 'forbidden message' });
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
       }
       next();
-    }
+    };
 
     /**
      * 0. do not show secure links to those who should not see the links
@@ -83,7 +87,7 @@ async function run() {
      */
 
     // get all users
-    app.get("/users", verifyJWT,verifyAdmin, async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -135,18 +139,18 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
-    
-    app.post('/menu',verifyJWT,verifyAdmin, async(req,res)=>{
+
+    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
       res.send(result);
-    })
-    app.delete('/menu/:id',verifyJWT,verifyAdmin, async(req,res)=>{
+    });
+    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await menuCollection.deleteOne(query);
       res.send(result);
-    })
+    });
     //review related apis---------------
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
@@ -186,40 +190,108 @@ async function run() {
 
     // payment related api
     // create payment intent-----------------------
-    app.post('/create-payment-intent',verifyJWT, async(req,res)=>{
-      const {price} = req.body;
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
       const amount = price * 100;
-      console.log(price,amount)
+      console.log(price, amount);
       const paymentIntent = await stripe.paymentIntents.create({
-        amount:amount,
-        currency:'usd',
-        payment_method_types:['card']
-
-      })
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
       res.send({
-        clientSecret: paymentIntent.client_secret
-      })
-    })
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
-    app.get('/admin-stats', async(req,res)=>{
+    app.get("/admin-stats",verifyJWT,verifyAdmin, async (req, res) => {
       const users = await userCollection.estimatedDocumentCount();
       const products = await menuCollection.estimatedDocumentCount();
       const orders = await paymentCollection.estimatedDocumentCount();
+
+      //best way to get sum of a price field is to use group and sum operator
+      /*
+        await paymentCollection.aggregate([
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$price' }
+            }
+          }
+        ]).toArray()
+      */
+
+        const payments = await paymentCollection.find().toArray();
+        const revenue = payments.reduce((sum,payment)=> sum + payment.price,0)
+
+
       res.send({
+        revenue,
         users,
         products,
-        orders
-      })
+        orders,
+      });
+    });
+
+     /**
+     * ---------------
+     * BANGLA SYSTEM(second best solution)
+     * ---------------
+     * 1. load all payments
+     * 2. for each payment, get the menuItems array
+     * 3. for each item in the menuItems array get the menuItem from the menu collection
+     * 4. put them in an array: allOrderedItems
+     * 5. separate allOrderedItems by category using filter
+     * 6. now get the quantity by using length: pizzas.length
+     * 7. for each category use reduce to get the total amount spent on this category
+     * 
+    */
+
+     // use pipeline
+     app.get('/order-stats', verifyJWT, verifyAdmin, async(req, res) =>{
+      const pipeline = [
+        {
+          $lookup: {
+            from: 'menu',
+            localField: 'menuItems',
+            foreignField: '_id',
+            as: 'menuItemsData'
+          }
+        },
+        {
+          $unwind: '$menuItemsData'
+        },
+        {
+          $group: {
+            _id: '$menuItemsData.category',
+            count: { $sum: 1 },
+            total: { $sum: '$menuItemsData.price' }
+          }
+        },
+        {
+          $project: {
+            category: '$_id',
+            count: 1,
+            total: { $round: ['$total', 2] },
+            _id: 0
+          }
+        }
+      ];
+
+      const result = await paymentCollection.aggregate(pipeline).toArray()
+      res.send(result)
+
     })
 
-    
-    app.post('/payments', verifyJWT, async(req,res)=>{
+    app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
-      const  query = {_id: {$in: payment.cartItems.map(id=> new ObjectId(id))}};
+      const query = {
+        _id: { $in: payment.cartItems.map((id) => new ObjectId(id)) },
+      };
       const deleteResult = await cartCollection.deleteMany(query);
-      res.send({insertResult,deleteResult})
-    })
+      res.send({ insertResult, deleteResult });
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
