@@ -184,6 +184,7 @@ async function run() {
       res.send(result);
     });
 
+    // payment related api
     // create payment intent-----------------------
     app.post('/create-payment-intent',verifyJWT, async(req,res)=>{
       const {price} = req.body;
@@ -200,7 +201,18 @@ async function run() {
       })
     })
 
-    // payment related api
+    app.get('/admin-stats', async(req,res)=>{
+      const users = await userCollection.estimatedDocumentCount();
+      const products = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentCollection.estimatedDocumentCount();
+      res.send({
+        users,
+        products,
+        orders
+      })
+    })
+
+    
     app.post('/payments', verifyJWT, async(req,res)=>{
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
