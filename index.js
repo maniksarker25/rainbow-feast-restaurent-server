@@ -46,7 +46,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const userCollection = client.db("RainbowFeastDB").collection("users");
     const menuCollection = client.db("RainbowFeastDB").collection("menu");
@@ -56,7 +56,7 @@ async function run() {
       .db("RainbowFeastDB")
       .collection("payments");
 
-    // SECURE APISss
+    // SECURE APIS
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
