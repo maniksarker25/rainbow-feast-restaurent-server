@@ -226,7 +226,7 @@ async function run() {
       */
 
         const payments = await paymentCollection.find().toArray();
-        const revenue = payments.reduce((sum,payment)=> sum + payment.price,0)
+        const revenue = (payments.reduce((sum,payment)=> sum + payment.price,0)).toFixed(2)
 
 
       res.send({
