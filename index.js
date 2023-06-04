@@ -80,6 +80,31 @@ async function run() {
       next();
     };
 
+
+
+    //menu related apis--------------------
+    app.get("/menu", async (req, res) => {
+      const result = await menuCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
+      res.send(result);
+    });
+    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.deleteOne(query);
+      res.send(result);
+    });
+    //review related apis---------------
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
+
     /**
      * 0. do not show secure links to those who should not see the links
      * 1. use jwt token: verifyJWT
@@ -134,28 +159,7 @@ async function run() {
       res.send(result);
     });
 
-    //menu related apis--------
-    app.get("/menu", async (req, res) => {
-      const result = await menuCollection.find().toArray();
-      res.send(result);
-    });
-
-    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
-      const newItem = req.body;
-      const result = await menuCollection.insertOne(newItem);
-      res.send(result);
-    });
-    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await menuCollection.deleteOne(query);
-      res.send(result);
-    });
-    //review related apis---------------
-    app.get("/reviews", async (req, res) => {
-      const result = await reviewCollection.find().toArray();
-      res.send(result);
-    });
+    
 
     // cart collection  apis
     app.get("/carts", verifyJWT, async (req, res) => {
