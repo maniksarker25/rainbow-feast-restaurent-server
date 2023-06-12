@@ -93,18 +93,30 @@ async function run() {
       const result = await menuCollection.insertOne(newItem);
       res.send(result);
     });
+    
     app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await menuCollection.deleteOne(query);
       res.send(result);
     });
+
+
+
     //review related apis---------------
+
+    // add review ---------
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
 
+    // add review 
+    app.post('/add-review', verifyJWT, async(req,res)=>{
+      const review  = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    })
     /**
      * 0. do not show secure links to those who should not see the links
      * 1. use jwt token: verifyJWT
@@ -254,14 +266,6 @@ async function run() {
      // use pipeline
      app.get('/order-stats', verifyJWT,verifyAdmin, async(req, res) =>{
       const pipeline = [
-        // {
-        //   $lookup: {
-        //     from: 'menu',
-        //     localField: 'menuItems',
-        //     foreignField: '_id',
-        //     as: 'menuItemsData'
-        //   }
-        // },
         {
           $addFields: {
             menuItemsObjectIds: {
