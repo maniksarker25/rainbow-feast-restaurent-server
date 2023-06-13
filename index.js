@@ -313,7 +313,7 @@ async function run() {
       const orders = await paymentCollection.countDocuments(query);
       const reviews = await reviewCollection.countDocuments(query);
       const bookings = await bookingCollection.countDocuments(query);
-      res.send({orders,reviews})
+      res.send({orders,reviews,bookings})
     })
 
      /**
