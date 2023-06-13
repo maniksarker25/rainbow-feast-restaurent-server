@@ -135,6 +135,15 @@ async function run() {
       const result = await reviewCollection.insertOne(review);
       res.send(result);
     })
+
+    // get all payment 
+    app.get('/payments',verifyJWT,verifyAdmin, async(req,res)=>{
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    })
+
+
+
     /**
      * 0. do not show secure links to those who should not see the links
      * 1. use jwt token: verifyJWT
@@ -241,7 +250,7 @@ async function run() {
     });
 
     // get payment history 
-    app.get('/payment-history', async(req,res)=>{
+    app.get('/payment-history',verifyJWT, async(req,res)=>{
       const email = req.query.email;
       const query = {email:email};
       const result = await paymentCollection.find(query).sort({date:-1}).toArray();
