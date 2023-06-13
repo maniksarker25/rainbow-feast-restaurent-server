@@ -105,13 +105,18 @@ async function run() {
     });
 
     // update a menu 
-    app.patch('/update-recipe', async(req,res)=>{
-      const updatedRecipe = req.body;
+    app.patch('/update-recipe/:id', async(req,res)=>{
+      const {updatedRecipe} = req.body;
+      const id = req.params.id;
+      console.log(updatedRecipe)
+      const query = {_id:new ObjectId(id)};
       const updateDoc = {
         $set: {
           name:updatedRecipe.name,price:updatedRecipe.price,recipe:updatedRecipe.recipe
         },
       }; 
+      const result = await menuCollection.updateOne(query,updateDoc);
+      res.send(result)
     })
 
 
