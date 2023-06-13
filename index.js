@@ -220,6 +220,14 @@ async function run() {
       });
     });
 
+    // get payment history 
+    app.get('/payment-history', async(req,res)=>{
+      const email = req.query.email;
+      const query = {email:email};
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get("/admin-stats",verifyJWT,verifyAdmin, async (req, res) => {
       const users = await userCollection.estimatedDocumentCount();
       const products = await menuCollection.estimatedDocumentCount();
