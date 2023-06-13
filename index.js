@@ -90,7 +90,9 @@ async function run() {
       res.send(result);
     });
 
-    // admin related apis ---------------
+    // admin related apis ---------------------------------------------------------------
+
+  
     // add menu -----------
     app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
@@ -162,6 +164,14 @@ async function run() {
       };
       const result = await bookingCollection.updateOne(query,updateDoc)
       res.send(result);
+    })
+
+    // get all costumers 
+    app.get('/costumers', async(req,res)=>{
+      const role = req.query.role;
+      const query = {role:role}
+      const result = await userCollection.find(query).toArray();
+      res.send(result)
     })
 
 
