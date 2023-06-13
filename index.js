@@ -88,12 +88,15 @@ async function run() {
       res.send(result);
     });
 
+    // admin related apis ---------------
+    // add menu -----------
     app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
       res.send(result);
     });
     
+    // delete a menu----------
     app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -101,11 +104,21 @@ async function run() {
       res.send(result);
     });
 
+    // update a menu 
+    app.patch('/update-recipe', async(req,res)=>{
+      const updatedRecipe = req.body;
+      const updateDoc = {
+        $set: {
+          name:updatedRecipe.name,price:updatedRecipe.price,recipe:updatedRecipe.recipe
+        },
+      }; 
+    })
+
 
 
     //review related apis---------------
 
-    // add review ---------
+    // get reviews ---------
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
@@ -122,6 +135,8 @@ async function run() {
      * 1. use jwt token: verifyJWT
      * 2. use verifyAdmin middleware
      */
+
+
 
     // get all users
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
@@ -173,7 +188,7 @@ async function run() {
 
     
 
-    // cart collection  apis
+    // user related apis ---------------------------------
     app.get("/carts", verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
