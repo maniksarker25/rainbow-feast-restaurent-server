@@ -257,6 +257,9 @@ async function run() {
       res.send(result)
     })
 
+    // stats-----------
+
+    // admin stats 
     app.get("/admin-stats",verifyJWT,verifyAdmin, async (req, res) => {
       const users = await userCollection.estimatedDocumentCount();
       const products = await menuCollection.estimatedDocumentCount();
@@ -285,6 +288,15 @@ async function run() {
         orders,
       });
     });
+
+    // user states-------
+    app.get('/user-stats',verifyJWT,async(req,res)=>{
+      const email = req.query.email;
+      const query = {email:email};
+      const orders = await paymentCollection.countDocuments(query);
+      const reviews = await reviewCollection.countDocuments(query);
+      res.send({orders,reviews})
+    })
 
      /**
      * ---------------
