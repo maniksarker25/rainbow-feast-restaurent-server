@@ -144,6 +144,22 @@ async function run() {
       res.send(result);
     })
 
+    // get all bookings
+    app.get('/bookings',verifyJWT,verifyAdmin, async(req,res)=>{
+      const result = await bookingCollection.find().toArray();
+      res.send(result)
+    })
+
+    // update booking status 
+    app.patch('update-booking-status', async(req,res)=>{
+      const status = req.query.status;
+      const updateDoc = {
+        $set: {
+          plot: `A harvest of random numbers, such as: ${Math.random()}`
+        },
+      };
+    })
+
 
 
     /**
@@ -242,7 +258,7 @@ async function run() {
       res.send(result);
     })
     // get bookings
-    app.get('/bookings',verifyJWT, async(req,res)=>{
+    app.get('/my-bookings',verifyJWT, async(req,res)=>{
       const email = req.query.email;
       const query = {email:email};
       const result = await bookingCollection.find(query).toArray();
