@@ -52,6 +52,7 @@ async function run() {
     const menuCollection = client.db("RainbowFeastDB").collection("menu");
     const reviewCollection = client.db("RainbowFeastDB").collection("reviews");
     const cartCollection = client.db("RainbowFeastDB").collection("carts");
+    const bookingCollection = client.db("RainbowFeastDB").collection("bookings");
     const paymentCollection = client
       .db("RainbowFeastDB")
       .collection("payments");
@@ -233,6 +234,13 @@ async function run() {
       res.send(result);
     });
 
+    // book a table 
+    app.post('/book-table',verifyJWT, async(req,res)=>{
+      const {table} = req.body;
+      const result = await bookingCollection.insertOne(table);
+      res.send(result);
+    })
+
     // payment related api
     // create payment intent-----------------------
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
@@ -261,7 +269,8 @@ async function run() {
 
     // admin stats 
     app.get("/admin-stats",verifyJWT,verifyAdmin, async (req, res) => {
-      const users = await userCollection.estimatedDocumentCount();
+      const query = {role:"user"}
+      const users = await userCollection.countDocuments(query);
       const products = await menuCollection.estimatedDocumentCount();
       const orders = await paymentCollection.estimatedDocumentCount();
 
