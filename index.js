@@ -32,6 +32,7 @@ const verifyJWT = (req, res, next) => {
 };
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const e = require("express");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.16yxiu9.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -240,6 +241,13 @@ async function run() {
       const result = await bookingCollection.insertOne(table);
       res.send(result);
     })
+    // get bookings
+    app.get('/bookings',verifyJWT, async(req,res)=>{
+      const email = req.query.email;
+      const query = {email:email};
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result)
+    })
 
     // payment related api
     // create payment intent-----------------------
@@ -304,6 +312,7 @@ async function run() {
       const query = {email:email};
       const orders = await paymentCollection.countDocuments(query);
       const reviews = await reviewCollection.countDocuments(query);
+      const bookings = await bookingCollection.countDocuments(query);
       res.send({orders,reviews})
     })
 
