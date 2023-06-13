@@ -151,13 +151,17 @@ async function run() {
     })
 
     // update booking status 
-    app.patch('update-booking-status', async(req,res)=>{
+    app.patch('/update-booking-status/:id', async(req,res)=>{
       const status = req.query.status;
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
       const updateDoc = {
         $set: {
-          plot: `A harvest of random numbers, such as: ${Math.random()}`
+         status:status
         },
       };
+      const result = await bookingCollection.updateOne(query,updateDoc)
+      res.send(result);
     })
 
 
